@@ -15,7 +15,11 @@ def __fetch_live_video(stream_addr, videoId, func):
     interval = 1 / globalVariables.GLOBAL_FPS
     while True:
         time.sleep(interval)
-        _, frame = cap.read()
+        ret, frame = cap.read()
+        if not ret:
+            time.sleep(1)
+            cap = cv2.VideoCapture(stream_addr)
+            continue
         frame = cv2.resize(frame, (row, col), interpolation=cv2.INTER_CUBIC)
         _, buffer = cv2.imencode('.jpg', frame)
         encodedJPG = base64.b64encode(buffer).decode('utf-8')
@@ -34,14 +38,17 @@ def __fetch_live_video(stream_addr, videoId, func):
     cap.release()
 
 
-def playVideo():
-    stream_addr = globalVariables.GLOBAL_STREAM_ADDRESS
+def playVideo(stream_addr):
     cap = cv2.VideoCapture(stream_addr)
     row = 256
     col = 256
     while True:
         time.sleep(0.05)
-        _, frame = cap.read()
+        ret, frame = cap.read()
+        if not ret:
+            time.sleep(1)
+            cap = cv2.VideoCapture(stream_addr)
+            continue
         frame = cv2.resize(frame, (row, col), interpolation=cv2.INTER_CUBIC)
         _, buffer = cv2.imencode('.jpg', frame)
         # encode data

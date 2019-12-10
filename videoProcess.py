@@ -7,6 +7,18 @@ import base64
 import json
 import os
 import cv2
+import pkg_resources
+
+
+haar_xml = pkg_resources.resource_filename('cv2', 'data/haarcascade_frontalface_default.xml')
+face_cascade = cv2.CascadeClassifier(haar_xml)
+
+
+def __analysis(img_np):
+    gray = cv2.cvtColor(img_np, cv2.COLOR_BGR2GRAY)
+    faces = face_cascade.detectMultiScale(gray, 1.1, 4)
+    for (x, y, w, h) in faces:
+        cv2.rectangle(img_np, (x, y), (x + w, y + h), (255, 0, 0), 3)
 
 
 def __process_video_data(list):
@@ -23,6 +35,7 @@ def __process_video_data(list):
         data = base64.b64decode(code)
         nparr = np.fromstring(data, np.uint8)
         img_np = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        __analysis(img_np)
         video_writer.write(img_np)
 
     video_writer.release()
