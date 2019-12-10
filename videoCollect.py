@@ -5,14 +5,16 @@ import time
 import kafkaUtil
 import threading
 import numpy as np
+import globalVariables
 
 
 def __fetch_live_video(stream_addr, videoId, func):
     cap = cv2.VideoCapture(stream_addr)
-    row = 256
-    col = 256
+    row = globalVariables.GLOBAL_ROW
+    col = globalVariables.GLOBAL_COL
+    interval = 1 / globalVariables.GLOBAL_FPS
     while True:
-        time.sleep(0.05)
+        time.sleep(interval)
         _, frame = cap.read()
         frame = cv2.resize(frame, (row, col), interpolation=cv2.INTER_CUBIC)
         _, buffer = cv2.imencode('.jpg', frame)
@@ -33,12 +35,12 @@ def __fetch_live_video(stream_addr, videoId, func):
 
 
 def playVideo():
-    stream_addr = 'rtmp://media3.scctv.net/live/scctv_800'
+    stream_addr = globalVariables.GLOBAL_STREAM_ADDRESS
     cap = cv2.VideoCapture(stream_addr)
     row = 256
     col = 256
     while True:
-        time.sleep(0.15)
+        time.sleep(0.05)
         _, frame = cap.read()
         frame = cv2.resize(frame, (row, col), interpolation=cv2.INTER_CUBIC)
         _, buffer = cv2.imencode('.jpg', frame)
@@ -63,7 +65,7 @@ def collect(topic, videoId):
     def func(json):
         kafkaUtil.publish_message(producer, topic, json)
 
-    stream_addr = 'rtmp://media3.scctv.net/live/scctv_800'
+    stream_addr = globalVariables.GLOBAL_STREAM_ADDRESS
     t = threading.Thread(target=__fetch_live_video, args=(stream_addr, videoId, func))
     t.start()
     print("Producing data")

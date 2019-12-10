@@ -1,11 +1,12 @@
 from pyspark import SparkConf, SparkContext
 from pyspark.streaming import StreamingContext
 from pyspark.streaming.kafka import KafkaUtils
+import globalVariables
+import numpy as np
 import base64
 import json
 import os
 import cv2
-import numpy as np
 
 
 def __process_video_data(list):
@@ -14,7 +15,7 @@ def __process_video_data(list):
     row = list[0]["row"]
     col = list[0]["col"]
     filename = "output/" + videoId + "-" + str(list[0]["timestamp"]) + ".avi"
-    fps = 20
+    fps = globalVariables.GLOBAL_FPS
     fourcc = cv2.VideoWriter_fourcc(*"MJPG")
     video_writer = cv2.VideoWriter(filename, fourcc, fps, (row, col))
     for json in list:
@@ -35,14 +36,14 @@ def __map_func(c):
 
 def process(topic):
     os.environ['PYSPARK_SUBMIT_ARGS'] = '--jars spark-streaming-kafka-0-8-assembly_2.11-2.1.1.jar pyspark-shell'
-    brokers = 'localhost:9092'
+    brokers = globalVariables.GLOBAL_BROKER
     conf = SparkConf().setMaster("local[2]").setAppName("VideoProcess")
     sc = SparkContext(conf=conf)
-    ssc = StreamingContext(sc, 2)
+    ssc = StreamingContext(sc, globalVariables.GLOBAL_BATCH_DURATION)
     stream = KafkaUtils.createDirectStream(ssc, [topic], {'metadata.broker.list': brokers})
 
     processed = stream.map(lambda x: x[1]) \
-        .window(10, 6) \
+        .window(globalVariables.GLOBAL_WINDOW_DURATION, globalVariables.GLOBAL_SLIDE_DURATION) \
         .map(json.loads) \
         .map(lambda x: (x['timestamp'], x)) \
         .transform(lambda rdd: rdd.sortByKey(ascending=True)) \
