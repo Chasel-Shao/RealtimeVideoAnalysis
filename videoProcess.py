@@ -8,6 +8,23 @@ import json
 import os
 import cv2
 import pkg_resources
+import requests
+
+
+def faceplusplus_api(img_base64):
+    __data = {"api_key": globalVariables.API_KEY,
+              "api_secret": globalVariables.API_SECRET,
+              "image_base64": img_base64}
+    response = requests.post(url=globalVariables.URL, data=__data)
+    faces = response.json()["faces"]
+    data = base64.b64decode(img_base64)
+    nparr = np.fromstring(data, np.uint8)
+    img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+    for face in faces:
+        coordinate = face["face_rectangle"]
+        (x, y, w, h) = (coordinate['top'], coordinate['left'], coordinate['width'], coordinate['height'])
+        cv2.rectangle(img, (x, y), (x + w, y + h), (255, 0, 0), 3)
+    return img
 
 
 haar_xml = pkg_resources.resource_filename('cv2', 'data/haarcascade_frontalface_default.xml')

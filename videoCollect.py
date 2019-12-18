@@ -20,6 +20,7 @@ def __fetch_live_video(stream_addr, videoId, func):
             time.sleep(1)
             cap = cv2.VideoCapture(stream_addr)
             continue
+        col = int(frame.shape[0] * row / frame.shape[1])
         frame = cv2.resize(frame, (row, col), interpolation=cv2.INTER_CUBIC)
         _, buffer = cv2.imencode('.jpg', frame)
         encodedJPG = base64.b64encode(buffer).decode('utf-8')
